@@ -1,0 +1,108 @@
+---
+title: "topChef Challenge Statistics by Season"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{topChef Challenge Statistics by Season}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+## Description
+
+topChef provides the information that you need to summarize challenge statistics for a season of your choice. This example is for Season 20 "World All Stars." This is an example that combines the `challengewins` dataset and the `chefdetails` dataset. 
+
+## Challenge statistic summary
+
+### Visualization
+```{r ChallengeStatisticsVisualization, eval=TRUE,echo=FALSE,message=FALSE } 
+library(topChef)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+    chefdetails <- topChef::chefdetails %>% filter(seasonNumber == 20)
+    challengewins <- topChef::challengewins %>% filter(seasonNumber == 20)
+    
+    ###########################################################################
+    ## Set up data
+    ###########################################################################
+    currentstats <- challengewins %>%
+      select(!rating) %>% 
+      full_join(chefdetails %>% 
+                  select(series,season,seasonNumber,chef,placement,gender)) 
+    
+      ## number of each type (combination of challenge + outcome)
+        nums <- currentstats %>%
+          group_by(chef,challengeType,outcome,placement,gender) %>%
+          summarise(n=n()) %>%
+          # remove groups we don't want to visualize
+          filter(!(is.na(outcome)))
+        
+        nums$outcome <- factor(nums$outcome,levels=c("OUT","LOW","IN"
+                                                     ,"HIGH","WIN"))
+      
+        ## Create bar charts for #s of each combo of challenge type-outcome
+          nums %>%
+            filter(!(outcome %in% c("IN","OUT"))) %>%
+            ggplot(aes(x=n,y=chef,color=outcome,fill=outcome)) +
+            geom_bar(stat="identity" ,alpha=.8 ) +
+            facet_wrap(challengeType ~ outcome) +
+            scale_fill_manual(values=c("#ffbc69","#a3cce9","#1170AA"))+
+            scale_color_manual(values=c("#ffbc69","#a3cce9","#1170AA"))+
+            theme_minimal() +
+            theme(legend.position="none") +
+            labs(title="Challenge summary for Season 20")
+    
+
+```
+
+### Code
+
+```{r ChallengeStatisticsVisualization_code, eval=FALSE,echo=TRUE,message=FALSE} 
+library(topChef)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+    chefdetails <- topChef::chefdetails %>% filter(seasonNumber == 20)
+    challengewins <- topChef::challengewins %>% filter(seasonNumber == 20)
+    
+    ###########################################################################
+    ## Set up data
+    ###########################################################################
+    currentstats <- challengewins %>%
+      select(!rating) %>% 
+      full_join(chefdetails %>% 
+                  select(series,season,seasonNumber,chef,placement,gender)) 
+    
+      ## number of each type (combination of challenge + outcome)
+        nums <- currentstats %>%
+          group_by(chef,challengeType,outcome,placement,gender) %>%
+          summarise(n=n()) %>%
+          # remove groups we don't want to visualize
+          filter(!(is.na(outcome)))
+        
+        nums$outcome <- factor(nums$outcome,levels=c("OUT","LOW","IN"
+                                                     ,"HIGH","WIN"))
+      
+        ## Create bar charts for #s of each combo of challenge type-outcome
+          nums %>%
+            filter(!(outcome %in% c("IN","OUT"))) %>%
+            ggplot(aes(x=n,y=chef,color=outcome,fill=outcome)) +
+            geom_bar(stat="identity" ,alpha=.8 ) +
+            facet_wrap(challengeType ~ outcome) +
+            scale_fill_manual(values=c("#ffbc69","#a3cce9","#1170AA"))+
+            scale_color_manual(values=c("#ffbc69","#a3cce9","#1170AA"))+
+            theme_minimal() +
+            theme(legend.position="none") +
+            labs(title="Challenge summary for Season 20")
+   
+```
